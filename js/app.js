@@ -198,23 +198,57 @@ function uuid() {
 // ============================================================
 
 function initSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const topbar  = document.getElementById('topbar');
-  const main    = document.getElementById('mainContent');
-  const toggle  = document.getElementById('sidebarToggle');
+  const sidebar  = document.getElementById('sidebar');
+  const topbar   = document.getElementById('topbar');
+  const main     = document.getElementById('mainContent');
+  const toggle   = document.getElementById('sidebarToggle');
+  const overlay  = document.querySelector('.sidebar-overlay');
+
+  // Helper: ¿estamos en móvil?
+  const isMobile = () => window.innerWidth <= 768;
+
+  function openMobileMenu() {
+    sidebar.classList.add('mobile-open');
+    overlay.classList.add('visible');
+  }
+  function closeMobileMenu() {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('visible');
+  }
 
   toggle.addEventListener('click', () => {
-    state.sidebarCollapsed = !state.sidebarCollapsed;
-    sidebar.classList.toggle('collapsed', state.sidebarCollapsed);
-    topbar.classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
-    main.classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
+    if (isMobile()) {
+      // Móvil: drawer deslizante
+      sidebar.classList.contains('mobile-open') ? closeMobileMenu() : openMobileMenu();
+    } else {
+      // Desktop: colapsar/expandir
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      sidebar.classList.toggle('collapsed', state.sidebarCollapsed);
+      topbar.classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
+      main.classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
+    }
   });
 
-  // Nav items
+  // Cerrar menú móvil al tocar el overlay
+  overlay.addEventListener('click', closeMobileMenu);
+
+  // Nav items — en móvil cierra el drawer al navegar
   document.querySelectorAll('.nav-item[data-section]').forEach(item => {
     item.addEventListener('click', () => {
+      if (isMobile()) closeMobileMenu();
       navigateTo(item.dataset.section);
     });
+  });
+
+  // Al redimensionar, limpiar estados cruzados
+  window.addEventListener('resize', () => {
+    if (!isMobile()) {
+      closeMobileMenu();
+    } else {
+      sidebar.classList.remove('collapsed');
+      topbar.classList.remove('sidebar-collapsed');
+      main.classList.remove('sidebar-collapsed');
+    }
   });
 }
 
